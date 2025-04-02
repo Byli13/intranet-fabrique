@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L’Intranet de la Fabrique</title>
+    <!-- Google Fonts & Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* Variables CSS */
+        :root {
+            --primary: #6366f1;
+            --secondary: #a855f7;
+            --accent: #ec4899;
+            --background: #0f172a;
+            --surface: rgba(30, 41, 59, 0.95);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --glass: rgba(255, 255, 255, 0.1);
+            --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
+            --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        /* Reset & base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        body {
+            background: var(--background);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .main-container {
+            max-width: 1800px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .controls form {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .file-card {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 1.5rem;
+            transition: 0.4s;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--glass);
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+        .file-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--gradient);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+        .file-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: var(--shadow-xl);
+        }
+        .file-card:hover::before {
+            opacity: 0.1;
+        }
+
+        .file-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-icon i {
+            margin-right: 0.5rem;
+        }
+        .file-title {
+            margin-top: 0.75rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            word-break: break-all;
+        }
+        .file-meta {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+        .file-size {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Modal de prévisualisation */
+        .preview-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .preview-content {
+            background: var(--surface);
+            border: 1px solid var(--glass);
+            border-radius: 8px;
+            padding: 1rem;
+            max-width: 80%;
+            max-height: 80%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+        .preview-file {
+            flex: 1;
+            overflow: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .preview-file img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .preview-file iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 0 1rem;
+            }
+            .file-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="main-container">
+    <header>
+        <h1>L’Intranet de la Fabrique</h1>
+    </header>
+
+    <!-- Contrôles de navigation & upload -->
+    <div class="controls">
+        <!-- Chemin actuel -->
+        <div id="breadcrumb" style="padding:0.5rem;border:1px solid var(--glass);border-radius:0.5rem;"></div>
+
+        <!-- Formulaire d'upload -->
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" name="files" multiple />
+            <button type="submit">Uploader</button>
+        </form>
+    </div>
+
+    <!-- Grille d'affichage -->
+    <div class="file-grid" id="fileGrid"></div>
+</div>
+
+<!-- Modal de prévisualisation -->
+<div class="preview-overlay" id="previewOverlay">
+    <div class="preview-content">
+        <button class="close-btn" id="closePreview">&times;</button>
+        <div class="preview-file" id="previewFile"></div>
+    </div>
+</div>
+
+<script>
+    let currentDir = '/home/fabrique';
+
+    // Récupère la liste des fichiers/dossiers
+    async function fetchFiles(dir = '/home/fabrique') {
+        currentDir = dir;
+        try {
+            const response = await fetch('/api/files?dir=' + encodeURIComponent(dir));
+            const data = await response.json();
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            // data = { currentDir, items: [...] }
+            renderFiles(data.currentDir, data.items);
+        } catch (error) {
+            console.error('Erreur fetchFiles :', error);
+        }
+    }
+
+    // Affiche les fichiers dans la grille
+    function renderFiles(dir, items) {
+        // Gérer l'affichage du «chemin» (breadcrumb)
+        document.getElementById('breadcrumb').textContent = `Chemin : ${dir}`;
+
+        const grid = document.getElementById('fileGrid');
+        grid.innerHTML = '';
+
+        items.forEach(file => {
+            const card = document.createElement('div');
+            card.className = 'file-card';
+            card.innerHTML = `
+          <div class="file-header">
+            <div class="file-icon">${getFileIcon(file.type)}</div>
+            <button class="file-menu"><i class="fas fa-ellipsis-h"></i></button>
+          </div>
+          <h3 class="file-title">${file.name}</h3>
+          <div class="file-meta">
+            <span class="file-size">${file.size}</span>
+          </div>
+        `;
+
+            // Clic sur la carte : si c'est un dossier => navigation, sinon => preview
+            card.addEventListener('click', e => {
+                e.stopPropagation();
+                if (file.type === 'folder') {
+                    // Naviguer dans ce sous-dossier
+                    fetchFiles(file.path);
+                } else {
+                    // Tenter un preview, ou téléchargement
+                    previewFile(file);
+                }
+            });
+
+            // Pour un menu contextuel complet, on pourrait intercepter le clic sur .file-menu
+            const menuBtn = card.querySelector('.file-menu');
+            menuBtn.addEventListener('click', e => {
+                e.stopPropagation();
+                // Ici, nous pourrions afficher un vrai menu contextuel.
+                // Pour l’exemple, on télécharge directement.
+                downloadFile(file.path);
+            });
+
+            grid.appendChild(card);
+        });
+    }
+
+    // Renvoie l'icône en fonction du type
+    function getFileIcon(type) {
+        const icons = {
+            folder: '<i class="fas fa-folder fa-2x"></i>',
+            image: '<i class="fas fa-file-image fa-2x"></i>',
+            document: '<i class="fas fa-file-alt fa-2x"></i>',
+            archive: '<i class="fas fa-file-archive fa-2x"></i>',
+            video: '<i class="fas fa-file-video fa-2x"></i>',
+            audio: '<i class="fas fa-file-audio fa-2x"></i>',
+            pdf: '<i class="fas fa-file-pdf fa-2x"></i>',
+            default: '<i class="fas fa-file fa-2x"></i>'
+        };
+        return icons[type] || icons.default;
+    }
+
+    // Télécharge le fichier
+    function downloadFile(filePath) {
+        window.location.href = '/api/download?file=' + encodeURIComponent(filePath);
+    }
+
+    // Prévisualise un fichier (image, PDF, etc.)
+    function previewFile(file) {
+        // Pour un type image ou pdf, on peut l’afficher
+        if (file.type === 'image' || file.type === 'pdf') {
+            const previewOverlay = document.getElementById('previewOverlay');
+            const previewContainer = document.getElementById('previewFile');
+            previewContainer.innerHTML = '';
+
+            let el;
+            if (file.type === 'image') {
+                el = document.createElement('img');
+                el.src = '/api/raw?file=' + encodeURIComponent(file.path);
+            } else {
+                el = document.createElement('iframe');
+                el.src = '/api/raw?file=' + encodeURIComponent(file.path);
+            }
+            previewContainer.appendChild(el);
+
+            // Afficher le modal
+            previewOverlay.style.display = 'flex';
+        } else {
+            // Si pas pris en charge => on peut lancer un téléchargement direct
+            downloadFile(file.path);
+        }
+    }
+
+    // Fermer le modal de prévisualisation
+    document.getElementById('closePreview').addEventListener('click', () => {
+        document.getElementById('previewOverlay').style.display = 'none';
+    });
+
+    // Gérer l'upload
+    const uploadForm = document.getElementById('uploadForm');
+    uploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(uploadForm);
+        // POST vers /api/upload?dir=...
+        const url = '/api/upload?dir=' + encodeURIComponent(currentDir);
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            if (result.error) {
+                throw new Error(result.error);
+            }
+            alert('Upload terminé !');
+            // On recharge la liste
+            fetchFiles(currentDir);
+        } catch (error) {
+            console.error('Erreur upload :', error);
+            alert('Echec de l’upload.');
+        }
+    });
+
+    // Au chargement, afficher le contenu du répertoire de base
+    window.addEventListener('DOMContentLoaded', () => {
+        fetchFiles(currentDir);
+    });
+</script>
+</body>
+</html>
