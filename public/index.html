@@ -51,19 +51,100 @@
             margin-bottom: 1rem;
         }
 
+        /* Barre de contrôles */
         .controls {
             display: flex;
             gap: 1rem;
             margin-bottom: 1rem;
             flex-wrap: wrap;
+            align-items: center;
         }
 
-        .controls form {
+        /* Breadcrumb / Chemin d'accès */
+        .breadcrumb {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--glass);
+            border-radius: 0.5rem;
+            background: var(--surface);
+            box-shadow: var(--shadow-xl);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            min-height: 2.5rem;
+        }
+
+        /* Boutons de navigation */
+        .nav-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .nav-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--glass);
+            background: var(--surface);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
         }
+        .nav-btn:hover {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
 
+        /* Formulaire d'upload */
+        form#uploadForm {
+            display: flex;
+            align-items: center;
+            position: relative;
+            gap: 0.5rem;
+        }
+        /* On masque le vrai input file, on stylise un faux bouton */
+        form#uploadForm input[type='file'] {
+            display: none; /* masqué */
+        }
+        .upload-label {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--glass);
+            background: var(--surface);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .upload-label:hover {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        /* Bouton d'envoi du formulaire */
+        button.upload-submit {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--glass);
+            background: var(--surface);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button.upload-submit:hover {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        /* Grille d’affichage */
         .file-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -155,6 +236,10 @@
             font-size: 1.5rem;
             color: var(--text-primary);
             cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .close-btn:hover {
+            transform: scale(1.2);
         }
         .preview-file {
             flex: 1;
@@ -192,13 +277,32 @@
 
     <!-- Contrôles de navigation & upload -->
     <div class="controls">
-        <!-- Chemin actuel -->
-        <div id="breadcrumb" style="padding:0.5rem;border:1px solid var(--glass);border-radius:0.5rem;"></div>
+        <!-- Chemin actuel (breadcrumb) -->
+        <div class="breadcrumb" id="breadcrumb"></div>
+
+        <!-- Boutons de navigation -->
+        <div class="nav-buttons">
+            <button class="nav-btn" id="goUpBtn">
+                <i class="fas fa-level-up-alt"></i>
+                Remonter
+            </button>
+            <button class="nav-btn" id="goRootBtn">
+                <i class="fas fa-home"></i>
+                Racine
+            </button>
+        </div>
 
         <!-- Formulaire d'upload -->
         <form id="uploadForm" enctype="multipart/form-data">
-            <input type="file" name="files" multiple />
-            <button type="submit">Uploader</button>
+            <!-- Label stylisé pour input file -->
+            <label class="upload-label" for="fileInput">
+                <i class="fas fa-upload"></i>
+                Choisir fichier(s)
+            </label>
+            <input id="fileInput" type="file" name="files" multiple />
+
+            <!-- Bouton pour valider l'upload -->
+            <button type="submit" class="upload-submit">Uploader</button>
         </form>
     </div>
 
@@ -235,7 +339,7 @@
 
     // Affiche les fichiers dans la grille
     function renderFiles(dir, items) {
-        // Gérer l'affichage du «chemin» (breadcrumb)
+        // Gérer l'affichage du chemin actuel
         document.getElementById('breadcrumb').textContent = `Chemin : ${dir}`;
 
         const grid = document.getElementById('fileGrid');
@@ -247,7 +351,9 @@
             card.innerHTML = `
           <div class="file-header">
             <div class="file-icon">${getFileIcon(file.type)}</div>
-            <button class="file-menu"><i class="fas fa-ellipsis-h"></i></button>
+            <button class="file-menu" title="Télécharger">
+              <i class="fas fa-download"></i>
+            </button>
           </div>
           <h3 class="file-title">${file.name}</h3>
           <div class="file-meta">
@@ -267,12 +373,10 @@
                 }
             });
 
-            // Pour un menu contextuel complet, on pourrait intercepter le clic sur .file-menu
+            // Clic sur le bouton de menu => on télécharge
             const menuBtn = card.querySelector('.file-menu');
             menuBtn.addEventListener('click', e => {
                 e.stopPropagation();
-                // Ici, nous pourrions afficher un vrai menu contextuel.
-                // Pour l’exemple, on télécharge directement.
                 downloadFile(file.path);
             });
 
@@ -302,7 +406,6 @@
 
     // Prévisualise un fichier (image, PDF, etc.)
     function previewFile(file) {
-        // Pour un type image ou pdf, on peut l’afficher
         if (file.type === 'image' || file.type === 'pdf') {
             const previewOverlay = document.getElementById('previewOverlay');
             const previewContainer = document.getElementById('previewFile');
@@ -321,7 +424,7 @@
             // Afficher le modal
             previewOverlay.style.display = 'flex';
         } else {
-            // Si pas pris en charge => on peut lancer un téléchargement direct
+            // Sinon => téléchargement direct
             downloadFile(file.path);
         }
     }
@@ -337,7 +440,6 @@
         e.preventDefault();
 
         const formData = new FormData(uploadForm);
-        // POST vers /api/upload?dir=...
         const url = '/api/upload?dir=' + encodeURIComponent(currentDir);
 
         try {
@@ -357,6 +459,31 @@
             alert('Echec de l’upload.');
         }
     });
+
+    // Bouton : remonter d'un dossier
+    document.getElementById('goUpBtn').addEventListener('click', () => {
+        goUpOneLevel();
+    });
+
+    // Bouton : aller à la racine /home/fabrique
+    document.getElementById('goRootBtn').addEventListener('click', () => {
+        fetchFiles('/home/fabrique');
+    });
+
+    // Fonction pour remonter d'un niveau, sans dépasser /home/fabrique
+    function goUpOneLevel() {
+        if (currentDir === '/home/fabrique') {
+            return; // déjà à la racine
+        }
+        // Retirer la dernière portion après un slash
+        const idx = currentDir.lastIndexOf('/');
+        if (idx <= '/home/fabrique'.length) {
+            fetchFiles('/home/fabrique');
+        } else {
+            const parent = currentDir.substring(0, idx);
+            fetchFiles(parent);
+        }
+    }
 
     // Au chargement, afficher le contenu du répertoire de base
     window.addEventListener('DOMContentLoaded', () => {
