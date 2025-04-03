@@ -1,0 +1,284 @@
+/* style.css */
+
+/* Variables CSS */
+:root {
+    --primary: #6366f1;
+    --secondary: #a855f7;
+    --accent: #ec4899;
+    --background: #0f172a;
+    --surface: rgba(30, 41, 59, 0.95);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --error: #ef4444;
+    --glass: rgba(255, 255, 255, 0.1);
+    --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
+    --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+  
+  /* Reset & base */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  body {
+    background: var(--background);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+    display: flex; /* pour sidebar + container */
+  }
+  
+  /* Sidebar (arborescence) */
+  .sidebar {
+    width: 280px;
+    background: var(--surface);
+    border-right: 1px solid var(--glass);
+    padding: 1rem;
+    overflow-y: auto;
+  }
+  .sidebar h2 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+  .tree ul {
+    list-style: none;
+    margin-left: 1rem;
+  }
+  .tree li {
+    margin: 0.25rem 0;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+  .tree li:hover {
+    background: var(--glass);
+  }
+  
+  /* Container principal */
+  .main-container {
+    flex: 1;
+    margin: 2rem;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  header h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+  
+  /* Barre de contrôles */
+  .controls {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  
+  /* Breadcrumb / Chemin d'accès */
+  .breadcrumb {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--glass);
+    border-radius: 0.5rem;
+    background: var(--surface);
+    box-shadow: var(--shadow-xl);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    min-height: 2.5rem;
+  }
+  
+  /* Boutons de navigation */
+  .nav-buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .nav-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--glass);
+    background: var(--surface);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .nav-btn:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  }
+  
+  /* Upload button */
+  #uploadBtn {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--glass);
+    background: var(--surface);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  #uploadBtn:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  }
+  
+  /* Grille d’affichage */
+  .file-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 1rem;
+  }
+  
+  .file-card {
+    background: var(--surface);
+    border-radius: 24px;
+    padding: 1.5rem;
+    transition: 0.4s;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--glass);
+    transform-style: preserve-3d;
+    cursor: pointer;
+  }
+  .file-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--gradient);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+  }
+  .file-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: var(--shadow-xl);
+  }
+  .file-card:hover::before {
+    opacity: 0.1;
+  }
+  .file-card.folder.dragover {
+    box-shadow: 0 0 10px var(--primary);
+  }
+  
+  .file-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .file-header-buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  /* Boutons d’action Télécharger/Supprimer plus stylés */
+  .file-menu, .file-delete {
+    border: none;
+    background: var(--surface);
+    color: var(--text-primary);
+    padding: 0.4rem 0.6rem;
+    border-radius: 0.4rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  .file-menu:hover {
+    background: var(--accent);
+    color: #fff;
+  }
+  .file-delete:hover {
+    background: var(--error);
+    color: #fff;
+  }
+  
+  .file-title {
+    margin-top: 0.75rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    word-break: break-all;
+  }
+  .file-meta {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+  .file-size {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+  }
+  
+  /* Modal de prévisualisation agrandie */
+  .preview-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  .preview-content {
+    background: var(--surface);
+    border: 1px solid var(--glass);
+    border-radius: 8px;
+    padding: 1rem;
+    max-width: 95%;
+    max-height: 95%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  .close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+  .close-btn:hover {
+    transform: scale(1.2);
+  }
+  .preview-file {
+    flex: 1;
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .preview-file img, .preview-file iframe {
+    max-width: 100%;
+    max-height: 100%;
+  }
+  
+  @media (max-width: 768px) {
+    .sidebar {
+      display: none;
+    }
+    .main-container {
+      margin: 1rem;
+    }
+    .file-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
